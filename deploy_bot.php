@@ -1,39 +1,61 @@
 #!/usr/bin/env php
 <?php
-define("WEBROOT_PATH", "/var/www/html");
-define("BRANCH_TO_FOLLOW", "master");
-define("DEFAULT_TIMEZONE", "Asia/Seoul");
+define('WEBROOT_PATH', '/home/pickartyou/webroot');
+define('BRANCH_TO_FOLLOW', 'master');
+define('DEFAULT_TIMEZONE', 'Asia/Seoul');
 
 date_default_timezone_set(DEFAULT_TIMEZONE);
 
-$payload = json_decode($_POST["payload"]);
+$payload = NULL;
 $log = '';
+if (isset($_POST['payload']))
+    $payload = json_decode($_POST['payload']);
 
-if ($payload !== NULL && $payload->ref === 'refs/heads/' . BRANCH_TO_FOLLOW) {
-    // Modify UTC time to local time
-    $dt = new DateTime($payload->head_commit->timestamp);
-    $dt->setTimezone(new DateTimeZone(DEFAULT_TIMEZONE));
+if ($payload === NULL && !isset($argv[1]))
+    exit('Not supported!' . PHP_EOL);
 
-    $log .= $dt->format('Y-m-d H:i:s') . ' ' . DEFAULT_TIMEZONE . PHP_EOL;
-    $log .= "Last Commit: " . $payload->head_commit->id . PHP_EOL;
-    $log .= "Author: " . $payload->head_commit->author->name . PHP_EOL;
-    $log .= $payload->head_commit->message . PHP_EOL;
+if ($payload !== NULL) {
+    if ($payload->ref === 'refs/heads/' . BRANCH_TO_FOLLOW) {
+        // Modify UTC time to local time
+        $dt = new DateTime($payload->head_commit->timestamp);
+        $dt->setTimezone(new DateTimeZone(DEFAULT_TIMEZONE));
 
-    // Execute git command to sync
-    $git_sync_command = '';
-    $git_sync_command .= 'cd ' . WEBROOT_PATH;
-    $git_sync_command .= ' && git checkout -f master';
-    $git_sync_command .= ' && git reset HEAD --hard';
-    $git_sync_command .= ' && git pull';
-    exec($git_sync_command, $result_data, $result_code);
-
-    // To check git command output and return value
-    if ((strpos($result_data[1], "Updating") === false && strpos($result_data[1], "Already up-to-date.") === false) || $result_code !== 0) {
-        $log .= PHP_EOL . "Somethings Wrong";
-        // TODO: What to do when error occurs
+        $log .= $dt->format('Y-m-d H:i:s') . ' ' . DEFAULT_TIMEZONE . PHP_EOL;
+        $log .= 'Last Commit: ' . $payload->head_commit->id . PHP_EOL;
+        $log .= 'Author: ' . $payload->head_commit->author->name . PHP_EOL;
+        $log .= $payload->head_commit->message . PHP_EOL;
     } else {
-        $log .= PHP_EOL . "Successfully Updated";
+        exit('Not supported branch' . PHP_EOL);
     }
-
-    echo $log;
 }
+
+if (isset($argv[1])) {
+    if ($argv[1] === 'manual') {
+        $log .= 'Manually updating...' . PHP_EOL;
+    } else {
+        exit('Not supported command' . PHP_EOL);
+    }
+}
+
+// Execute git command to sync
+$git_sync_command = '';
+$git_sync_command .= 'cd ' . WEBROOT_PATH;
+$git_sync_command .= ' && git checkout -f master';
+$git_sync_command .= ' && git reset HEAD --hard';
+$git_sync_command .= ' && git pull';
+exec($git_sync_command, $result_data, $result_code);
+
+$result = array_filter($result_data, function($data) {
+    return (strpos($data, 'Updating') !== FALSE || strpos($data, 'up-to-date') !== FALSE);
+});
+
+// To check git command output and return value
+if ($result_code !== 0 || count($result) === 0) {
+    $log .= PHP_EOL . var_dump($result_data);
+    $log .= PHP_EOL . 'Somethings Wrong'. PHP_EOL;
+    // TODO: What to do when error occurs
+} else {
+    $log .= PHP_EOL . 'Successfully Updated' . PHP_EOL;
+}
+
+echo $log . PHP_EOL;
