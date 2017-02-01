@@ -18,8 +18,6 @@ if ($payload !== NULL && $payload->ref === BRANCH_TO_FOLLOW) {
     $log .= "Author: " . $payload->head_commit->author->name . PHP_EOL;
     $log .= $payload->head_commit->message . PHP_EOL;
 
-    // Export environment variable
-    exec("export CI_ENV='production'");
     // Execute git command to sync
     $git_sync_command = 'cd ' . WEBROOT_PATH . ' && git reset HEAD --hard && git pull';
     exec($git_sync_command, $result_data, $result_code);
