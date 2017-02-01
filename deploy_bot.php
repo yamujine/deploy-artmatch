@@ -1,4 +1,3 @@
-#!/usr/bin/env php
 <?php
 define('WEBROOT_PATH', '/home/pickartyou/webroot');
 define('BRANCH_TO_FOLLOW', 'master');
