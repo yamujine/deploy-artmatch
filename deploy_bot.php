@@ -1,3 +1,4 @@
+#!/usr/bin/env php
 <?php
 define("WEBROOT_PATH", "/var/www/html");
 define("BRANCH_TO_FOLLOW", "master");
