@@ -1,6 +1,6 @@
 <?php
 define("WEBROOT_PATH", "/var/www/html");
-define("BRANCH_TO_FOLLOW", "refs/heads/master");
+define("BRANCH_TO_FOLLOW", "master");
 define("DEFAULT_TIMEZONE", "Asia/Seoul");
 
 date_default_timezone_set(DEFAULT_TIMEZONE);
@@ -8,7 +8,7 @@ date_default_timezone_set(DEFAULT_TIMEZONE);
 $payload = json_decode($_POST["payload"]);
 $log = '';
 
-if ($payload !== NULL && $payload->ref === BRANCH_TO_FOLLOW) {
+if ($payload !== NULL && $payload->ref === 'refs/heads/' . BRANCH_TO_FOLLOW) {
     // Modify UTC time to local time
     $dt = new DateTime($payload->head_commit->timestamp);
     $dt->setTimezone(new DateTimeZone(DEFAULT_TIMEZONE));
@@ -19,7 +19,11 @@ if ($payload !== NULL && $payload->ref === BRANCH_TO_FOLLOW) {
     $log .= $payload->head_commit->message . PHP_EOL;
 
     // Execute git command to sync
-    $git_sync_command = 'cd ' . WEBROOT_PATH . ' && git reset HEAD --hard && git pull';
+    $git_sync_command = '';
+    $git_sync_command .= 'cd ' . WEBROOT_PATH;
+    $git_sync_command .= ' && git checkout -f master';
+    $git_sync_command .= ' && git reset HEAD --hard';
+    $git_sync_command .= ' && git pull';
     exec($git_sync_command, $result_data, $result_code);
 
     // To check git command output and return value
