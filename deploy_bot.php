@@ -31,7 +31,7 @@ if ($payload !== NULL) {
 $git_sync_command = '';
 $git_sync_command .= 'cd ' . WEBROOT_PATH;
 $git_sync_command .= ' && git checkout -f ' . BRANCH_TO_FOLLOW;
-$git_sync_command .= ' && git reset HEAD --hard';
+$git_sync_command .= ' && git reset HEAD';
 $git_sync_command .= ' && git pull';
 exec($git_sync_command, $result_data, $result_code);
 
